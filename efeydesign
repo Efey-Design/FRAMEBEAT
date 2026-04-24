@@ -1,0 +1,25 @@
+# 🎬 FrameBeat — AI Music Video Generator
+FrameBeat turns your music into a complete music video production package in seconds.
+Upload any song and our AI analyzes the audio energy, tempo, and mood — then generates
+a full music video concept tailored to your track.
+## ✨ Features
+- 🎵 Upload local songs (MP3, WAV, OGG, M4A, FLAC)
+- ⚡ Real-time audio energy & BPM analysis
+- 🎬 Scene-by-scene storyboard with shot types & locations
+- ✍️ Auto-generated song lyrics
+- 🎨 Color grading & visual style direction
+- 🎥 Camera & cinematography recommendations
+- 💰 Production budget estimate
+- 📄 Export full script
+## 🚀 How to Use
+1. Open the website
+2. Upload your song or drag & drop it
+3. Fill in your artist name and video concept
+4. Hit **Generate Music Video**
+5. Get your full production package instantly
+## 🛠️ Built With
+- HTML, CSS, JavaScript
+- Web Audio API (audio analysis)
+- Claude AI (Anthropic)
+## 🌐 Live Demo
+[View Live Site](https://yourusername.github.io/framebeat)
