@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VISIO — AI Music Video Creator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080810;
+    --surface: #0f0f1a;
+    --surface2: #161625;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --neon: #c8ff00;
+    --neon2: #00e5ff;
+    --pink: #ff2d78;
+    --text: #f0eee8;
+    --muted: rgba(240,238,232,0.5);
+    --dim: rgba(240,238,232,0.25);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* animated noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* glowing orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb1 { width: 600px; height: 600px; background: rgba(200,255,0,0.04); top: -200px; right: -150px; }
+  .orb2 { width: 500px; height: 500px; background: rgba(0,229,255,0.04); bottom: -100px; left: -150px; }
+  .orb3 { width: 300px; height: 300px; background: rgba(255,45,120,0.05); top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+  /* nav */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 2.5rem;
+    background: rgba(8,8,16,0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 0.1em;
+    color: var(--neon);
+    text-shadow: 0 0 30px rgba(200,255,0,0.4);
+  }
+
+  .logo span { color: var(--text); }
+
+  .nav-links { display: flex; gap: 2rem; align-items: center; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--neon); }
+
+  .nav-cta {
+    background: var(--neon);
+    color: #000;
+    border: none;
+    padding: 0.55rem 1.25rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  /* hero */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 8rem 2rem 4rem;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--neon);
+    border: 1px solid rgba(200,255,0,0.3);
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .hero-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--neon);
+    box-shadow: 0 0 8px var(--neon);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 12vw, 9rem);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+
+  .hero-title .line2 {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(240,238,232,0.3);
+  }
+
+  .hero-title .accent { color: var(--neon); text-shadow: 0 0 40px rgba(200,255,0,0.3); }
+
+  .hero-sub {
+    max-width: 520px;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin: 1.5rem 0 2.5rem;
+    animation: fadeUp 0.7s 0.2s ease both;
+    font-weight: 300;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 1rem;
+    animation: fadeUp 0.7s 0.3s ease both;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-primary {
+    background: var(--neon);
+    color: #000;
+    border: none;
+    padding: 0.9rem 2.2rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-2px); box-shadow: 0 10px 40px rgba(200,255,0,0.25); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border2);
+    padding: 0.9rem 2.2rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
+
+  /* ticker */
+  .ticker-wrap {
+    width: 100%;
+    overflow: hidden;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 0;
+    background: var(--surface);
+    position: relative;
+    z-index: 1;
+  }
+
+  .ticker {
+    display: flex;
+    gap: 3rem;
+    animation: ticker 25s linear infinite;
+    white-space: nowrap;
+    width: max-content;
+  }
+
+  .ticker-item {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .ticker-item .dot { color: var(--neon); margin-right: 1rem; }
+
+  @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  /* upload zone */
+  .upload-zone {
+    border: 1.5px dashed rgba(200,255,0,0.25);
+    border-radius: 12px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(200,255,0,0.02);
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: rgba(200,255,0,0.6);
+    background: rgba(200,255,0,0.05);
+  }
+  .upload-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    border: none; background: transparent; padding: 0;
+  }
+  .upload-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+  .upload-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.08em;
+    color: var(--neon);
+    margin-bottom: 0.4rem;
+  }
+  .upload-sub {
+    font-size: 0.78rem;
+    color: var(--dim);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* audio player */
+  .audio-player {
+    display: none;
+    background: var(--surface2);
+    border: 1px solid rgba(200,255,0,0.2);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .player-top {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .player-art {
+    width: 50px; height: 50px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(200,255,0,0.2), rgba(0,229,255,0.15));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+  .player-info { flex: 1; min-width: 0; }
+  .player-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+  .player-meta {
+    font-size: 0.72rem;
+    color: var(--dim);
+    font-family: 'Space Mono', monospace;
+    margin-top: 3px;
+  }
+  .player-controls { display: flex; align-items: center; gap: 10px; }
+  .play-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--neon);
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+  }
+  .play-btn:hover { opacity: 0.85; }
+  .play-btn svg { width: 14px; height: 14px; fill: #000; margin-left: 2px; }
+  .play-btn.playing svg { margin-left: 0; }
+  .player-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--dim);
+    white-space: nowrap;
+  }
+  .player-bar-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+  }
+  .player-bar-fill {
+    height: 100%;
+    background: var(--neon);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.1s linear;
+    pointer-events: none;
+  }
+  .song-detected {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.75rem;
+  }
+  .detected-chip {
+    font-size: 0.7rem;
+    font-family: 'Space Mono', monospace;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(200,255,0,0.08);
+    border: 1px solid rgba(200,255,0,0.2);
+    color: var(--neon);
+  }
+  .remove-song {
+    background: transparent;
+    border: 1px solid rgba(255,45,120,0.3);
+    color: var(--pink);
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    transition: all 0.15s;
+  }
+  .remove-song:hover { background: rgba(255,45,120,0.1); }
+
+  /* analyze badge */
+  .analyze-badge {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    color: var(--neon2);
+    background: rgba(0,229,255,0.06);
+    border: 1px solid rgba(0,229,255,0.2);
+    padding: 8px 14px;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+  .analyze-badge.visible { display: flex; }
+  .analyze-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--neon2);
+    animation: pulse 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  /* main generator */
+  .generator-section {
+    position: relative;
+    z-index: 1;
+    padding: 6rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--neon);
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    letter-spacing: 0.04em;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-sub {
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-weight: 300;
+    margin-bottom: 3rem;
+  }
+
+  /* form */
+  .gen-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  @media(max-width:600px){ .form-row{grid-template-columns:1fr} }
+
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  input[type="text"], textarea, select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 300;
+    padding: 0.85rem 1rem;
+    transition: border-color 0.2s;
+    width: 100%;
+    appearance: none;
+  }
+
+  input[type="text"]:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: rgba(200,255,0,0.4);
+    box-shadow: 0 0 0 3px rgba(200,255,0,0.06);
+  }
+
+  textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+
+  select option { background: #0f0f1a; }
+
+  /* genre pills */
+  .genre-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .pill {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .pill:hover, .pill.active {
+    border-color: var(--neon);
+    color: var(--neon);
+    background: rgba(200,255,0,0.06);
+  }
+
+  .generate-btn {
+    width: 100%;
+    padding: 1.1rem;
+    background: var(--neon);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 1.5rem;
+  }
+
+  .generate-btn:hover:not(:disabled) {
+    opacity: 0.88;
+    box-shadow: 0 0 40px rgba(200,255,0,0.3);
+    transform: translateY(-1px);
+  }
+
+  .generate-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* loading */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 4rem 2rem;
+  }
+
+  .loading-ring {
+    width: 60px; height: 60px;
+    border: 2px solid var(--border);
+    border-top-color: var(--neon);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1.5rem;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    color: var(--neon);
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* output */
+  #output { display: none; }
+
+  .output-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+  }
+
+  .output-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+  .output-title .neon { color: var(--neon); }
+
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 0.75rem;
+  }
+
+  .meta-pill {
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .meta-pill.green { border-color: rgba(200,255,0,0.3); color: var(--neon); }
+  .meta-pill.cyan { border-color: rgba(0,229,255,0.3); color: var(--neon2); }
+  .meta-pill.pink { border-color: rgba(255,45,120,0.3); color: var(--pink); }
+
+  /* concept card */
+  .concept-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .concept-card h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--neon);
+    margin-bottom: 1rem;
+  }
+
+  .concept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .concept-item label {
+    color: var(--dim);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .concept-item p {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .concept-item p.big {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.05em;
+    color: var(--neon);
+  }
+
+  /* lyrics section */
+  .lyrics-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .lyrics-block h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--neon2);
+    margin-bottom: 1.5rem;
+  }
+
+  .lyric-section { margin-bottom: 1.75rem; }
+
+  .lyric-section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--pink);
+    margin-bottom: 0.6rem;
+  }
+
+  .lyric-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.88rem;
+    line-height: 2;
+    color: var(--muted);
+    font-style: italic;
+    border-left: 2px solid rgba(0,229,255,0.2);
+    padding-left: 1.25rem;
+  }
+
+  /* scenes */
+  .scenes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .scene-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .scene-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+
+  .scene-thumb {
+    height: 130px;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scene-thumb-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scene-num-big {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 5rem;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    opacity: 0.06;
+    position: absolute;
+    right: 1rem;
+    bottom: -0.5rem;
+  }
+
+  .scene-icon {
+    font-size: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .scene-body { padding: 1.25rem; }
+
+  .scene-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .scene-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--neon);
+  }
+
+  .scene-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--dim);
+  }
+
+  .scene-title {
+    font-weight: 600;
+    font-size: 0.92rem;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+
+  .scene-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.6;
+    font-weight: 300;
+    margin-bottom: 0.75rem;
+  }
+
+  .scene-shot {
+    font-size: 0.72rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--neon2);
+    background: rgba(0,229,255,0.05);
+    border: 1px solid rgba(0,229,255,0.12);
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+  }
+
+  .scene-color {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: var(--dim);
+    margin-top: 0.5rem;
+  }
+
+  .color-swatch {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* production notes */
+  .notes-card {
+    background: linear-gradient(135deg, rgba(200,255,0,0.04), rgba(0,229,255,0.03));
+    border: 1px solid rgba(200,255,0,0.15);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .notes-card h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--neon);
+    margin-bottom: 1.25rem;
+  }
+
+  .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .note-item label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .note-item p {
+    font-size: 0.88rem;
+    color: var(--text);
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  /* action buttons */
+  .action-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+  }
+
+  .action-btn {
+    flex: 1;
+    min-width: 160px;
+    padding: 0.9rem 1.5rem;
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text);
+  }
+
+  .action-btn:hover { background: var(--surface2); border-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
+
+  .action-btn.primary {
+    background: var(--neon);
+    color: #000;
+    border-color: transparent;
+    font-weight: 600;
+  }
+
+  .action-btn.primary:hover { opacity: 0.85; box-shadow: 0 8px 30px rgba(200,255,0,0.25); }
+
+  /* reset btn */
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.6rem 1.25rem;
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--border2); color: var(--text); }
+
+  /* error */
+  .error-msg {
+    background: rgba(255,45,120,0.08);
+    border: 1px solid rgba(255,45,120,0.25);
+    color: #ff6b9e;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    font-size: 0.88rem;
+    display: none;
+    margin-top: 1rem;
+  }
+
+  /* footer */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 2rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:1.2rem; letter-spacing:0.1em; color:var(--neon); }
+  .footer-copy { font-size:0.78rem; color:var(--dim); font-family:'Space Mono',monospace; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(24px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<nav>
+  <div class="logo">VIS<span>IO</span></div>
+  <div class="nav-links">
+    <a href="#generator">Create</a>
+    <a href="#how">How it works</a>
+    <a href="#">Gallery</a>
+  </div>
+  <button class="nav-cta" onclick="document.getElementById('generator').scrollIntoView({behavior:'smooth'})">Start Creating</button>
+</nav>
+
+<!-- hero -->
+<section class="hero">
+  <div class="hero-tag">AI-Powered Music Video Studio</div>
+  <h1 class="hero-title">
+    <div>CREATE</div>
+    <div class="line2">MUSIC</div>
+    <div><span class="accent">VIDEOS</span></div>
+  </h1>
+  <p class="hero-sub">Describe your song. Get a complete music video concept — lyrics, visual style, storyboard, color grading, and shot direction — in seconds.</p>
+  <div class="hero-btns">
+    <button class="btn-primary" onclick="document.getElementById('generator').scrollIntoView({behavior:'smooth'})">Start Generating →</button>
+    <button class="btn-ghost">Watch Demo</button>
+  </div>
+</section>
+
+<!-- ticker -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <span class="ticker-item"><span class="dot">●</span> CINEMATIC VISUALS</span>
+    <span class="ticker-item"><span class="dot">●</span> FULL LYRICS</span>
+    <span class="ticker-item"><span class="dot">●</span> SCENE STORYBOARD</span>
+    <span class="ticker-item"><span class="dot">●</span> COLOR GRADING</span>
+    <span class="ticker-item"><span class="dot">●</span> SHOT LIST</span>
+    <span class="ticker-item"><span class="dot">●</span> MUSIC DIRECTION</span>
+    <span class="ticker-item"><span class="dot">●</span> PRODUCTION NOTES</span>
+    <span class="ticker-item"><span class="dot">●</span> CINEMATIC VISUALS</span>
+    <span class="ticker-item"><span class="dot">●</span> FULL LYRICS</span>
+    <span class="ticker-item"><span class="dot">●</span> SCENE STORYBOARD</span>
+    <span class="ticker-item"><span class="dot">●</span> COLOR GRADING</span>
+    <span class="ticker-item"><span class="dot">●</span> SHOT LIST</span>
+    <span class="ticker-item"><span class="dot">●</span> MUSIC DIRECTION</span>
+    <span class="ticker-item"><span class="dot">●</span> PRODUCTION NOTES</span>
+  </div>
+</div>
+
+<!-- generator -->
+<section class="generator-section" id="generator">
+  <div class="section-label">// The Studio</div>
+  <h2 class="section-title">YOUR VISION,<br>INSTANTLY</h2>
+  <p class="section-sub">Fill in the details below and let AI build your complete music video package.</p>
+
+  <div class="gen-form">
+
+    <!-- upload zone -->
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="songFile" accept="audio/*" onchange="handleSongUpload(event)">
+      <span class="upload-icon">🎵</span>
+      <div class="upload-title">Drop your song here</div>
+      <div class="upload-sub">MP3 · WAV · OGG · M4A · FLAC &nbsp;—&nbsp; or click to browse</div>
+    </div>
+
+    <!-- audio player (shown after upload) -->
+    <div class="audio-player" id="audioPlayer">
+      <div class="player-top">
+        <div class="player-art">🎧</div>
+        <div class="player-info">
+          <div class="player-name" id="playerName">—</div>
+          <div class="player-meta" id="playerMeta">—</div>
+        </div>
+        <button class="remove-song" onclick="removeSong()">✕ Remove</button>
+      </div>
+      <div class="player-controls">
+        <button class="play-btn" id="playBtn" onclick="togglePlay()">
+          <svg id="playIcon" viewBox="0 0 16 16"><polygon points="3,2 13,8 3,14"/></svg>
+        </button>
+        <span class="player-time" id="currentTime">0:00</span>
+        <div class="player-bar-wrap" id="progressBar" onclick="seekAudio(event)">
+          <div class="player-bar-fill" id="progressFill"></div>
+        </div>
+        <span class="player-time" id="totalTime">0:00</span>
+      </div>
+      <div class="song-detected" id="songDetected"></div>
+    </div>
+
+    <div class="analyze-badge" id="analyzeBadge">Song loaded — AI will analyze audio details and auto-fill the form fields below</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Artist / Band Name</label>
+        <input type="text" id="artist" placeholder="e.g. Davido, Burna Boy, Taylor Swift...">
+      </div>
+      <div class="form-group">
+        <label>Song Title</label>
+        <input type="text" id="songTitle" placeholder="e.g. Midnight Frequency">
+      </div>
+    </div>
+
+    <div class="form-group full" style="margin-bottom:1.5rem">
+      <label>Song Concept / Theme</label>
+      <textarea id="concept" placeholder="Describe the vibe, story, or emotion behind the song. e.g. A bittersweet love song about leaving Lagos for a new life abroad, nostalgic and hopeful at the same time..."></textarea>
+    </div>
+
+    <div class="form-group" style="margin-bottom:1.5rem">
+      <label>Music Genre</label>
+      <div class="genre-pills" id="genrePills">
+        <button class="pill active" data-genre="Afrobeats">Afrobeats</button>
+        <button class="pill" data-genre="Amapiano">Amapiano</button>
+        <button class="pill" data-genre="Hip-Hop / Rap">Hip-Hop</button>
+        <button class="pill" data-genre="R&B / Soul">R&B / Soul</button>
+        <button class="pill" data-genre="Pop">Pop</button>
+        <button class="pill" data-genre="Electronic / EDM">Electronic</button>
+        <button class="pill" data-genre="Reggae / Dancehall">Reggae</button>
+        <button class="pill" data-genre="Rock / Indie">Rock / Indie</button>
+        <button class="pill" data-genre="Gospel / Worship">Gospel</button>
+        <button class="pill" data-genre="Jazz / Neo-Soul">Jazz / Neo-Soul</button>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Visual Style</label>
+        <select id="visualStyle">
+          <option>Cinematic / Film-grade</option>
+          <option>Street / Gritty Realism</option>
+          <option>Luxury / Glamorous</option>
+          <option>Surreal / Fantasy</option>
+          <option>Retro / Vintage 90s</option>
+          <option>Futuristic / Cyberpunk</option>
+          <option>Minimalist / Clean</option>
+          <option>African Cultural Heritage</option>
+          <option>Animated / Motion Graphics</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Video Length</label>
+        <select id="videoLength">
+          <option value="2-minute">2 minutes (4 scenes)</option>
+          <option value="3-minute" selected>3 minutes (6 scenes)</option>
+          <option value="4-minute">4 minutes (8 scenes)</option>
+          <option value="5-minute">5 minutes (10 scenes)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Mood / Energy</label>
+        <select id="mood">
+          <option>Euphoric & Celebratory</option>
+          <option>Dark & Intense</option>
+          <option>Romantic & Sensual</option>
+          <option>Melancholic & Reflective</option>
+          <option>Hype & Aggressive</option>
+          <option>Spiritual & Uplifting</option>
+          <option>Playful & Fun</option>
+          <option>Mysterious & Ethereal</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="formError" class="error-msg">Please fill in the artist name, song title, and concept before generating.</div>
+
+    <button class="generate-btn" id="genBtn" onclick="generateVideo()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
+      GENERATE MUSIC VIDEO
+    </button>
+  </div>
+
+  <!-- loading -->
+  <div class="loading" id="loading">
+    <div class="loading-ring"></div>
+    <div class="loading-text" id="loadingText">CRAFTING YOUR VISION...</div>
+  </div>
+
+  <!-- output -->
+  <div id="output">
+    <div class="output-header">
+      <div>
+        <div id="outputTitle" class="output-title"></div>
+        <div class="meta-pills" id="metaPills"></div>
+      </div>
+      <button class="reset-btn" onclick="resetForm()">← New Video</button>
+    </div>
+
+    <!-- concept overview -->
+    <div class="concept-card">
+      <h3>// Video Concept</h3>
+      <div class="concept-grid" id="conceptGrid"></div>
+    </div>
+
+    <!-- lyrics -->
+    <div class="lyrics-block">
+      <h3>// Song Lyrics</h3>
+      <div id="lyricsContent"></div>
+    </div>
+
+    <!-- scenes -->
+    <div class="section-label" style="margin-top:2rem">// Storyboard — Scene by Scene</div>
+    <div class="scenes-grid" id="scenesGrid"></div>
+
+    <!-- production notes -->
+    <div class="notes-card">
+      <h3>// Production Notes</h3>
+      <div class="notes-grid" id="notesGrid"></div>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn primary" onclick="exportScript()">Download Script PDF</button>
+      <button class="action-btn" onclick="expandLyrics()">Expand Full Lyrics →</button>
+      <button class="action-btn" onclick="getDirectorNotes()">Director's Notes →</button>
+      <button class="action-btn" onclick="getBudget()">Budget Estimate →</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">VISIO</div>
+  <div class="footer-copy">// AI Music Video Studio — Powered by Claude AI</div>
+</footer>
+
+<script>
+  // drag-over styling
+  const uploadZone = document.getElementById('uploadZone');
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('audio/')) processSongFile(file);
+  });
+
+  let audioEl = null;
+  let songAnalysis = null;
+
+  function handleSongUpload(e) {
+    const file = e.target.files[0];
+    if (file) processSongFile(file);
+  }
+
+  function processSongFile(file) {
+    // cleanup old
+    if (audioEl) { audioEl.pause(); audioEl.src = ''; }
+    const url = URL.createObjectURL(file);
+    audioEl = new Audio(url);
+
+    // parse filename for title/artist hints
+    const raw = file.name.replace(/\.[^.]+$/, '');
+    let guessArtist = '', guessTitle = raw;
+    const separators = [' - ', ' – ', '_-_', ' | '];
+    for (const sep of separators) {
+      if (raw.includes(sep)) {
+        const parts = raw.split(sep);
+        guessArtist = parts[0].trim();
+        guessTitle = parts.slice(1).join(sep).trim();
+        break;
+      }
+    }
+
+    // file size & type info
+    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+    const ext = file.name.split('.').pop().toUpperCase();
+
+    audioEl.addEventListener('loadedmetadata', () => {
+      const dur = audioEl.duration;
+      const mins = Math.floor(dur / 60);
+      const secs = Math.floor(dur % 60).toString().padStart(2, '0');
+      const durStr = `${mins}:${secs}`;
+
+      // analyze audio energy with Web Audio API
+      analyzeAudioEnergy(url, dur, guessArtist, guessTitle, durStr, ext, sizeMB);
+
+      document.getElementById('totalTime').textContent = durStr;
+      document.getElementById('playerName').textContent = guessTitle || file.name;
+      document.getElementById('playerMeta').textContent = `${ext} · ${sizeMB} MB · ${durStr}`;
+
+      // auto-fill form
+      if (guessTitle && !document.getElementById('songTitle').value)
+        document.getElementById('songTitle').value = guessTitle;
+      if (guessArtist && !document.getElementById('artist').value)
+        document.getElementById('artist').value = guessArtist;
+
+      // auto-select video length based on duration
+      const vl = document.getElementById('videoLength');
+      if (dur < 150) vl.value = '2-minute';
+      else if (dur < 210) vl.value = '3-minute';
+      else if (dur < 270) vl.value = '4-minute';
+      else vl.value = '5-minute';
+    });
+
+    audioEl.addEventListener('timeupdate', () => {
+      if (!audioEl.duration) return;
+      const pct = (audioEl.currentTime / audioEl.duration) * 100;
+      document.getElementById('progressFill').style.width = pct + '%';
+      const m = Math.floor(audioEl.currentTime / 60);
+      const s = Math.floor(audioEl.currentTime % 60).toString().padStart(2, '0');
+      document.getElementById('currentTime').textContent = `${m}:${s}`;
+    });
+
+    audioEl.addEventListener('ended', () => {
+      document.getElementById('playIcon').innerHTML = '<polygon points="3,2 13,8 3,14"/>';
+      document.getElementById('playBtn').classList.remove('playing');
+    });
+
+    document.getElementById('uploadZone').style.display = 'none';
+    document.getElementById('audioPlayer').style.display = 'block';
+    document.getElementById('analyzeBadge').classList.add('visible');
+  }
+
+  async function analyzeAudioEnergy(url, duration, artist, title, durStr, ext, sizeMB) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const resp = await fetch(url);
+      const buf = await resp.arrayBuffer();
+      const decoded = await ctx.decodeAudioData(buf);
+      const data = decoded.getChannelData(0);
+
+      // sample energy across the track to get avg + peak
+      const samples = 200;
+      const step = Math.floor(data.length / samples);
+      let totalEnergy = 0, peakEnergy = 0;
+      const energyMap = [];
+      for (let i = 0; i < samples; i++) {
+        let e = 0;
+        for (let j = 0; j < step; j++) e += Math.abs(data[i * step + j] || 0);
+        const avg = e / step;
+        energyMap.push(avg);
+        totalEnergy += avg;
+        if (avg > peakEnergy) peakEnergy = avg;
+      }
+      const avgEnergy = totalEnergy / samples;
+      const energyRatio = avgEnergy / (peakEnergy || 1);
+
+      // classify energy
+      let energyLabel, bpmHint, moodHint;
+      if (avgEnergy > 0.18) { energyLabel = 'HIGH'; bpmHint = '120–140'; moodHint = 'Hype & Aggressive'; }
+      else if (avgEnergy > 0.1) { energyLabel = 'MED-HIGH'; bpmHint = '96–120'; moodHint = 'Euphoric & Celebratory'; }
+      else if (avgEnergy > 0.06) { energyLabel = 'MEDIUM'; bpmHint = '80–100'; moodHint = 'Romantic & Sensual'; }
+      else { energyLabel = 'LOW'; bpmHint = '60–85'; moodHint = 'Melancholic & Reflective'; }
+
+      // auto-set mood dropdown
+      const moodEl = document.getElementById('mood');
+      for (let opt of moodEl.options) {
+        if (opt.value === moodHint || opt.text === moodHint) { moodEl.value = opt.value; break; }
+      }
+
+      songAnalysis = { duration: durStr, durationSecs: duration, energyLabel, bpmHint, avgEnergy: avgEnergy.toFixed(4), ext, sizeMB };
+
+      document.getElementById('songDetected').innerHTML = `
+        <span class="detected-chip">⚡ Energy: ${energyLabel}</span>
+        <span class="detected-chip">♩ Est. BPM: ${bpmHint}</span>
+        <span class="detected-chip">⏱ Duration: ${durStr}</span>
+        <span class="detected-chip">🎚 Avg Level: ${(avgEnergy * 100).toFixed(1)}%</span>
+      `;
+
+      ctx.close();
+    } catch(e) {
+      // fallback if Web Audio fails
+      songAnalysis = { duration: durStr, durationSecs: duration, energyLabel: 'UNKNOWN', bpmHint: '—', ext, sizeMB };
+      document.getElementById('songDetected').innerHTML = `<span class="detected-chip">⏱ ${durStr}</span><span class="detected-chip">${ext} · ${sizeMB}MB</span>`;
+    }
+  }
+
+  function togglePlay() {
+    if (!audioEl) return;
+    if (audioEl.paused) {
+      audioEl.play();
+      document.getElementById('playIcon').innerHTML = '<rect x="3" y="2" width="4" height="12"/><rect x="9" y="2" width="4" height="12"/>';
+      document.getElementById('playBtn').classList.add('playing');
+    } else {
+      audioEl.pause();
+      document.getElementById('playIcon').innerHTML = '<polygon points="3,2 13,8 3,14"/>';
+      document.getElementById('playBtn').classList.remove('playing');
+    }
+  }
+
+  function seekAudio(e) {
+    if (!audioEl || !audioEl.duration) return;
+    const rect = document.getElementById('progressBar').getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    audioEl.currentTime = pct * audioEl.duration;
+  }
+
+  function removeSong() {
+    if (audioEl) { audioEl.pause(); audioEl.src = ''; audioEl = null; }
+    songAnalysis = null;
+    document.getElementById('audioPlayer').style.display = 'none';
+    document.getElementById('uploadZone').style.display = 'block';
+    document.getElementById('analyzeBadge').classList.remove('visible');
+    document.getElementById('songFile').value = '';
+    document.getElementById('progressFill').style.width = '0%';
+  }
+
+  // genre pill selection
+  let selectedGenre = 'Afrobeats';
+  document.getElementById('genrePills').addEventListener('click', e => {
+    if (e.target.classList.contains('pill')) {
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      e.target.classList.add('active');
+      selectedGenre = e.target.dataset.genre;
+    }
+  });
+
+  const loadingMessages = [
+    'READING YOUR SONG...',
+    'ANALYZING AUDIO ENERGY...',
+    'CRAFTING YOUR VISION...',
+    'COMPOSING THE NARRATIVE...',
+    'PAINTING THE SCENES...',
+    'WRITING THE LYRICS...',
+    'SETTING THE MOOD...',
+    'BUILDING THE STORYBOARD...'
+  ];
+
+  let loadingInterval;
+
+  function startLoadingMessages() {
+    let i = 0;
+    document.getElementById('loadingText').textContent = loadingMessages[0];
+    loadingInterval = setInterval(() => {
+      i = (i + 1) % loadingMessages.length;
+      document.getElementById('loadingText').textContent = loadingMessages[i];
+    }, 1800);
+  }
+
+  function stopLoadingMessages() {
+    clearInterval(loadingInterval);
+  }
+
+  async function generateVideo() {
+    const artist = document.getElementById('artist').value.trim();
+    const songTitle = document.getElementById('songTitle').value.trim();
+    const concept = document.getElementById('concept').value.trim();
+    const visualStyle = document.getElementById('visualStyle').value;
+    const videoLength = document.getElementById('videoLength').value;
+    const mood = document.getElementById('mood').value;
+    const errEl = document.getElementById('formError');
+
+    errEl.style.display = 'none';
+    if (!artist || !songTitle || !concept) {
+      errEl.style.display = 'block';
+      return;
+    }
+
+    document.getElementById('genBtn').disabled = true;
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('output').style.display = 'none';
+    document.getElementById('loading').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    startLoadingMessages();
+
+    const sceneCount = { '2-minute': 4, '3-minute': 6, '4-minute': 8, '5-minute': 10 }[videoLength];
+
+    const audioContext = songAnalysis ? `
+UPLOADED SONG AUDIO ANALYSIS (use this to inform the video):
+- Detected Duration: ${songAnalysis.duration}
+- Estimated Energy Level: ${songAnalysis.energyLabel} (avg amplitude: ${songAnalysis.avgEnergy})
+- Estimated BPM Range: ${songAnalysis.bpmHint}
+- File Format: ${songAnalysis.ext}
+Use the energy level to decide editing pace — HIGH energy = fast cuts & dynamic motion, LOW = slow lingering shots.
+` : '';
+
+    const prompt = `You are a top-tier music video director and songwriter. Create a complete professional music video package for:
+
+Artist: ${artist}
+Song Title: "${songTitle}"
+Genre: ${selectedGenre}
+Concept: ${concept}
+Visual Style: ${visualStyle}
+Mood/Energy: ${mood}
+Video Length: ${videoLength} with ${sceneCount} scenes
+${audioContext}
+
+Return ONLY a valid JSON object (no markdown, no backticks, no explanation) with this exact structure:
+{
+  "title": "${songTitle}",
+  "artist": "${artist}",
+  "genre": "${selectedGenre}",
+  "mood": "${mood}",
+  "bpm": "estimated BPM range e.g. 96–104",
+  "key": "musical key e.g. F# minor",
+  "logline": "One powerful sentence describing the music video",
+  "colorPalette": "3–4 specific color descriptions e.g. Deep indigo, burnt gold, ash white",
+  "cinematography": "Camera movement and lens style description",
+  "editingStyle": "Editing rhythm and technique",
+  "lyrics": {
+    "verse1": ["line1", "line2", "line3", "line4"],
+    "chorus": ["line1", "line2", "line3", "line4"],
+    "verse2": ["line1", "line2", "line3", "line4"],
+    "bridge": ["line1", "line2", "line3"],
+    "outro": ["line1", "line2"]
+  },
+  "scenes": [
+    {
+      "number": 1,
+      "title": "Scene title",
+      "timestamp": "0:00–0:28",
+      "shotType": "e.g. Aerial wide shot",
+      "location": "e.g. Lagos waterfront at golden hour",
+      "description": "Detailed visual description of what happens in this scene",
+      "colorGrade": "e.g. Warm amber with deep shadows",
+      "vibe": "One-word emotional descriptor"
+    }
+  ],
+  "productionNotes": {
+    "director": "Director style recommendation",
+    "crew": "Key crew positions needed",
+    "equipment": "Camera and lens recommendations",
+    "locations": "Key shooting locations needed",
+    "cast": "Cast description",
+    "budget": "Estimated production tier e.g. Mid-range $15k–$40k"
+  }
+}`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      const data = await res.json();
+      const raw = data.content.map(b => b.text || '').join('');
+      const clean = raw.replace(/```json|```/g, '').trim();
+      const video = JSON.parse(clean);
+      renderOutput(video);
+    } catch (e) {
+      errEl.textContent = 'Generation failed. Please check your input and try again.';
+      errEl.style.display = 'block';
+    }
+
+    stopLoadingMessages();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('genBtn').disabled = false;
+  }
+
+  const sceneEmojis = ['🎬','🌆','🎤','🌙','💫','🔥','🎭','🌊','⚡','🎪'];
+  const sceneColors = ['#c8ff00','#00e5ff','#ff2d78','#ff9f00','#a855f7','#22d3ee','#f43f5e','#84cc16','#f59e0b','#06b6d4'];
+
+  function renderOutput(v) {
+    // title
+    document.getElementById('outputTitle').innerHTML = `<span class="neon">"${v.title}"</span><br>${v.artist}`;
+
+    // meta pills
+    document.getElementById('metaPills').innerHTML = `
+      <span class="meta-pill green">${v.genre}</span>
+      <span class="meta-pill cyan">${v.mood}</span>
+      <span class="meta-pill pink">${v.bpm} BPM · ${v.key}</span>
+      <span class="meta-pill">${v.colorPalette}</span>
+    `;
+
+    // concept grid
+    document.getElementById('conceptGrid').innerHTML = `
+      <div class="concept-item">
+        <label>Logline</label>
+        <p>${v.logline}</p>
+      </div>
+      <div class="concept-item">
+        <label>Cinematography</label>
+        <p>${v.cinematography}</p>
+      </div>
+      <div class="concept-item">
+        <label>Editing Style</label>
+        <p>${v.editingStyle}</p>
+      </div>
+      <div class="concept-item">
+        <label>Color Palette</label>
+        <p class="big">${v.colorPalette}</p>
+      </div>
+    `;
+
+    // lyrics
+    const L = v.lyrics || {};
+    const sections = [
+      { key: 'verse1', label: 'Verse 1' },
+      { key: 'chorus', label: 'Chorus' },
+      { key: 'verse2', label: 'Verse 2' },
+      { key: 'bridge', label: 'Bridge' },
+      { key: 'outro', label: 'Outro' }
+    ];
+    document.getElementById('lyricsContent').innerHTML = sections
+      .filter(s => L[s.key] && L[s.key].length)
+      .map(s => `
+        <div class="lyric-section">
+          <div class="lyric-section-label">[${s.label}]</div>
+          <div class="lyric-text">${L[s.key].join('<br>')}</div>
+        </div>
+      `).join('');
+
+    // scenes
+    document.getElementById('scenesGrid').innerHTML = (v.scenes || []).map((s, i) => `
+      <div class="scene-card">
+        <div class="scene-thumb" style="background: linear-gradient(135deg, ${sceneColors[i % sceneColors.length]}11, ${sceneColors[(i+2) % sceneColors.length]}08)">
+          <div class="scene-thumb-inner">
+            <div class="scene-icon">${sceneEmojis[i % sceneEmojis.length]}</div>
+          </div>
+          <div class="scene-num-big" style="color:${sceneColors[i % sceneColors.length]}">${s.number}</div>
+        </div>
+        <div class="scene-body">
+          <div class="scene-meta">
+            <span class="scene-label">Scene ${s.number}</span>
+            <span class="scene-time">${s.timestamp || ''}</span>
+          </div>
+          <div class="scene-title">${s.title}</div>
+          <div class="scene-shot">${s.shotType}</div>
+          <div class="scene-desc">${s.description}</div>
+          <div class="scene-color">
+            <div class="color-swatch" style="background:${sceneColors[i % sceneColors.length]}"></div>
+            ${s.colorGrade} · <strong style="color:${sceneColors[i % sceneColors.length]}">${s.vibe}</strong>
+          </div>
+          <div style="font-size:0.75rem;color:var(--dim);margin-top:6px;font-family:'Space Mono',monospace">📍 ${s.location}</div>
+        </div>
+      </div>
+    `).join('');
+
+    // production notes
+    const P = v.productionNotes || {};
+    document.getElementById('notesGrid').innerHTML = [
+      { label: 'Director Style', value: P.director },
+      { label: 'Key Crew', value: P.crew },
+      { label: 'Equipment', value: P.equipment },
+      { label: 'Shoot Locations', value: P.locations },
+      { label: 'Cast', value: P.cast },
+      { label: 'Budget Tier', value: P.budget }
+    ].filter(n => n.value).map(n => `
+      <div class="note-item">
+        <label>${n.label}</label>
+        <p>${n.value}</p>
+      </div>
+    `).join('');
+
+    document.getElementById('output').style.display = 'block';
+    document.getElementById('output').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function resetForm() {
+    document.getElementById('output').style.display = 'none';
+    document.getElementById('generator').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function exportScript() {
+    window.print();
+  }
+
+  function expandLyrics() {
+    const artist = document.getElementById('artist').value;
+    const title = document.getElementById('songTitle').value;
+    alert('Opening full lyrics expansion in chat...');
+  }
+
+  function getDirectorNotes() {
+    alert('Director notes feature: In a full deployment, this would open a detailed director\'s treatment document.');
+  }
+
+  function getBudget() {
+    alert('Budget estimator: In a full deployment, this would generate an itemized production budget breakdown.');
+  }
+</script>
+</body>
+</html>
